@@ -31,36 +31,24 @@ public class SpiderDao {
 	 */
 	public static String spiderGet(String urlString) throws ClientProtocolException, IOException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
-//		httpclient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, 60000); 
 		HttpGet httpget = new HttpGet(urlString);
+		//设置读取超时(60秒)和连接超时(60秒)
 		RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(60000).setConnectTimeout(60000).build();
 		httpget.setConfig(requestConfig);
+		//接收请求的响应
 		CloseableHttpResponse response = httpclient.execute(httpget);
 		String content="";
 		System.out.println("开始爬行...");
 		try {
+			//将响应数据存入字符串中
 		    HttpEntity entity = response.getEntity();
 		    content = EntityUtils.toString(entity);
 		    Date date = new Date();
             String filename = ConstTools.tempHtmlDir+date.getTime()+(1+Math.random()*1000);
+            //将获取的数据存入文件中，文件名随机数设置，保证不覆盖
             FileTools.fileIn(filename+".html",content);
-            
-//		    if (entity != null) {
-//		        InputStream instream = entity.getContent();
-//    
-//		        try {
-//		            byte[] buff = new byte[ConstTools.byteMax];
-//		            int len = instream.read(buff);
-//		            content = new String(buff,0,len,ConstTools.charSet);
-////		            System.out.println(content);
-//		            Date date = new Date();
-//		            String filename = ConstTools.tempDir+date.getTime()+(1+Math.random()*1000);
-//		            FileTools.fileIn(filename+".html",content);	
-//		        } finally {
-//		            instream.close();
-//		        }
-//		    }
 		} finally {
+			//关闭响应
 		    response.close();
 		}
 		return content;
@@ -80,18 +68,22 @@ public class SpiderDao {
 		String keyWord="";
 		String aRule="[a-zA-z]+://[^\\s]*</a>";
 		int i =0;
+		//匹配出a标签的内容
 		Matcher mat = Pattern.compile(aRule).matcher(content);
 		while(mat.find()){
 			i++;
 			aTag = mat.group();			
 			try{
+			//提取出URL和关键字
 			url = aTag.substring(0,aTag.indexOf("\""));
 			keyWord = aTag.substring(aTag.indexOf("\"")+2,aTag.indexOf("<"));
 			}catch(Exception e){
+				//跳过异常链接
 				System.out.println("小蜘蛛抓到一个异常链接，跳过继续抓取...");
 				continue;
 			}
 			WebKey wbt = new WebKey(keyWord,url,1);
+			//找到的链接对象加入到链表中
 			webList.add(wbt);
 			System.out.println("提取"+i+"个链接..."+"关键字："+keyWord+"     超链接："+url);
 		}		
@@ -108,11 +100,13 @@ public class SpiderDao {
 		System.out.println("小蜘蛛抓取图片中...");
 		String ImgUrl="";
 		String rule="<img src=\"[^\\s]*";
+		//匹配图片链接
 		Matcher mat = Pattern.compile(rule).matcher(content);
 		while(mat.find()){
 			ImgUrl = mat.group();
-			if(!ImgUrl.matches("http://www.wtu.edu.cn")){
-				ImgUrl = "http://www.wtu.edu.cn"+ImgUrl.substring(10,ImgUrl.length()-1);
+			//拼装图片链接，有的图片存在头，有的不存在，有头的不加，没头的加上头
+			if(!ImgUrl.matches(urlString)){
+				ImgUrl = urlString+ImgUrl.substring(10,ImgUrl.length()-1);
 			}else{
 				ImgUrl = ImgUrl.substring(10,ImgUrl.length()-1);
 			}
@@ -126,31 +120,46 @@ public class SpiderDao {
 	 * 1.发送请求获取图片的字节流
 	 * 2.将图片字节流写入文件之中
 	 */
-	public static void spiderGetImg(String ImgUrl) throws IOException{
-		
+	public static void spiderGetImg(String ImgUrl) throws IOException{	
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpGet httpget = new HttpGet(ImgUrl);
+		//设置读取超时和连接超时
 		RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(60000).setConnectTimeout(60000).build();
 		httpget.setConfig(requestConfig);
+		//接收发送的响应
 		CloseableHttpResponse response = httpclient.execute(httpget);
 	
 		try{			
 			HttpEntity entity = response.getEntity();
 		   if (entity != null) {
+			   //由于图片是字节，采用字节流接收数据
 		        InputStream instream = entity.getContent();		        
 		        try {
+		        	//拼装图片名字
+		        	String imgType = ImgUrl.substring(ImgUrl.length()-4);
 		        	Date date = new Date();
-		        	String filename = ConstTools.tempImgDir+date.getTime()+(1+Math.random()*1000)+".png";
+		        	String filename = ConstTools.tempImgDir+date.getTime()+(1+Math.random()*1000)+imgType;
 		        	FileOutputStream fileOutputStream = new FileOutputStream(filename);
 		            byte[] buff = new byte[ConstTools.byteImgMax];
 		            int len = instream.read(buff);
+		            //将字节流写入文件
 		            fileOutputStream.write(buff, 0, len);
 		        	System.out.println("小蜘蛛放入图片至..."+filename+"文件中");
-		        } finally {
+		        }
+		        catch(Exception e){
+		        	System.out.println("小蜘蛛装入图片失败...");
+		        }
+		        finally {
+		        	//关闭字节输入流
 		            instream.close();
 		        }
 		    }
-		}finally {
+		}
+		catch(Exception e){
+			System.out.println("小蜘蛛没有得到回复...");
+		}
+		finally {
+			//关闭响应
 		    response.close();
 		}	
 	}

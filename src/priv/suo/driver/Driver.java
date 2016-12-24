@@ -42,6 +42,7 @@ public class Driver {
 				String keyword = scan.next();
 				System.out.print("选择目标(输入有效的网址)：");
 				String urlString = scan.next();
+				//开启小蜘蛛
 				startSpider(urlString,keyword);
 				break;
 			case 2:
@@ -50,10 +51,12 @@ public class Driver {
 				while(!key.equals("0")){
 					System.out.print("输入关键字(输入0返回)：");
 					key = scan.next();
+					//通过关键字搜索一下
 					fangSearch(key);
 				}
 				break;			
 			case 3:
+				//管理爬取到的资源
 				manageSourse();
 				break;
 			default:
@@ -81,45 +84,52 @@ public class Driver {
 	 * 小蜘蛛循环爬取流程
 	 * 1.向web服务器发送httpget请求，得到请求资源
 	 * 2.对资源进行处理，提取出，关键字，url，文档内容
-	 * 3.将提取的不同类型的资源分别存入keyword和website集合对象中
+	 * 3.将提取的不同类型的资源分别存入keyword和website数据库
 	 * 4.对得到的url进行第二次爬取，将新得到的url也存入一个website集合中
-	 * 5.将新得到的url与之前的对比，不同的则加入集合，相同的则关联度+1
+	 * 5.将新得到的url与之前的对比，不同的则加入数据库，相同的则关联度+1
 	 * 6.将得到的爬虫资源存入数据库
 	 */
 	public static void startSpider(String urlString,String keyword) throws IOException, SQLException{
 		System.out.println("小蜘蛛出发...捕猎...");
 		System.out.println("获取目标："+keyword+".....目标网页"+urlString);
-		SpiderDbdao dbdao = new SpiderDbdao(ConstTools.dbName);
+		//SpiderDbdao dbdao = new SpiderDbdao(ConstTools.dbName);
 		
-		if(dbdao.isExistUrl(urlString)){
+		/*if(dbdao.isExistUrl(urlString)){
 			//website中的wRank+1
 			dbdao.upWrank(urlString);
 			if(dbdao.isExistKey(keyword)){
 				//WebKey中的wkRank+1
 				dbdao.upWKrank(keyword,urlString);
 			}else{
-				//添加到数据库
+				//把新的key加到数据库
+				dbdao.addKey(keyword);
+				//把关联url和key的关联添加到数据库
 				dbdao.addWebKey(keyword,urlString);
 			}
 			
 		}else{
+			//把新的url加到数据库
+			dbdao.addUrl(urlString);
 			if(dbdao.isExistKey(keyword)){
 				//Keyword中的kRank+1
 				dbdao.upWrank(keyword);
+			}else{
+				//把新的key加到数据库
+				dbdao.addKey(keyword);
 			}
 			//添加到数据库
-			dbdao.addWebKey(keyword,urlString);
+			dbdao.addWebKey(keyword,urlString);*/
 			//获取网页内容
 			String webcont = SpiderDao.spiderGet(urlString);
 			//下载网页中的图片
 			SpiderDao.spiderDloadImg(webcont,urlString);
 			//抓取网页中链接
 			ArrayList<WebKey> wbList = SpiderDao.spiderDraw(webcont);
-			//循环进入
+			//使用刚刚抓取到的链接，进行循环
 			for(int i=0; i<wbList.size(); i++){
 				startSpider(wbList.get(i).getUrl(),wbList.get(i).getKey());
 			}
-		}
+		//}
 		System.out.println("小蜘蛛捕猎回家...");
 	}
 	
@@ -132,6 +142,7 @@ public class Driver {
 	 */
 	public static void fangSearch(String keyword) throws SQLException{
 		SearchDbdao searchdb = new SearchDbdao();
+		//根据关键字查找网页信息
 		searchdb.search(keyword);		
 	}
 	
@@ -143,6 +154,7 @@ public class Driver {
 	 */
 	public static void manageSourse() throws SQLException{
 		Scanner scan = new Scanner(System.in);
+		//管理资源菜单视图
 		manageView();
 		ManageDao mdao = new ManageDao(); 
 		int choice = 6;	

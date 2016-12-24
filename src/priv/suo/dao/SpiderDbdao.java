@@ -73,8 +73,6 @@ public class SpiderDbdao {
 	
 	//Ìí¼ÓURLºÍkeyµ½webKey
 	public void addWebKey(String keyword, String urlString) {
-		addUrl(urlString);
-		addKey(keyword);
 		dbtools.dbConn();
 		String sql = 
 				"INSERT WebKey(webId,keyId,wkRank) VALUES(" +

@@ -14,7 +14,7 @@ public class DbTools {
 	private ResultSet rs;
 	
 	/**
-	 * 
+	 * 连接数据库
 	 * @param dbName
 	 */
 	//实现驱动的加载，连接的建立，语句的创建
@@ -44,9 +44,9 @@ public class DbTools {
 	
 
 	/**
-	 * 
+	 * 数据库增删改操作
 	 * @param sql
-	 * @return
+	 * @return 影响记录的行数
 	 */
 	public int updateOperate(String sql){
 		int iRet=0;
@@ -63,9 +63,9 @@ public class DbTools {
 	
 	
 	/**
-	 * 
+	 * 数据库查找操作
 	 * @param sql
-	 * @return
+	 * @return 查到到的结果集
 	 */
 	public ResultSet selectOperate(String sql){
 		try{
@@ -78,7 +78,7 @@ public class DbTools {
 	}
 	
 	/**
-	 * 
+	 * 关闭数据库连接
 	 * 
 	 */
 	public void close(){
